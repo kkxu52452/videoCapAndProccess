@@ -87,9 +87,10 @@ func main() {
 		// along with
 		details := resp.DetecResult.face_list
 		for _, d := range details {
-			loc := d.location
-			rotrect := gocv.RotatedRect{nil,nil,image.Point{loc.Left,loc.Top},loc.width,loc.height,loc.rotation}
-			gocv.Rectangle(&img, rotrect.BoundingRect, blue, 3)
+			//loc := d.location
+			//rotrect := gocv.RotatedRect{nil,nil,image.Point{loc.Left,loc.Top},loc.width,loc.height,loc.rotation}
+
+			gocv.Rectangle(&img, image.Rect(50,50,100,100), blue, 3)
 			//size := gocv.GetTextSize("Human", gocv.FontHersheyPlain, 1.2, 2)
 			//pt := image.Pt(r.Min.X+(r.Min.X/2)-(size.X/2), r.Min.Y-2)
 			//gocv.PutText(&img, "Human", pt, gocv.FontHersheyPlain, 1.2, blue, 2)
