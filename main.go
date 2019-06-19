@@ -4,8 +4,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
@@ -13,23 +13,23 @@ import (
 )
 
 type Location struct {
-	Left 	int 	`json:"left"`
-	Top  	int 	`json:"top"`
-	width 	int 	`json:"left"`
-	height 	int 	`json:"height"`
-	rotation float64 	`json:"rotation"`
+	Left 		float64
+	Top  		float64
+	Width 		float64
+	Height 		float64
+	Rotation 	float64
 }
 
 type Detail struct {
-	location 		Location   	`json:"location"`
+	Location 		Location   	`json:"location"`
 	Probability 	float64 	`json:"face_probability"`
 }
 
 type Result struct {
-	face_list []Detail  `json:"face_list"`
+	FaceList []Detail  `json:"face_list"`
 }
 
-type Response struct {
+type MyResponse struct {
 	ReturnMsg string 	`json:"error_msg"`
 	DetecResult Result  `json:"result"`
 }
@@ -80,13 +80,13 @@ func main() {
 
 		// detect faces
 		resp := callFaceDetecAPI(img)
-		fmt.Printf("Face Detect#%d: %s", i, resp.ReturnMsg)
+		fmt.Printf("Face Detect Result#%d: %s", i, resp.ReturnMsg)
 
 		// draw a rectangle around each face on the original image,
 		// along with
-		details := resp.DetecResult.face_list
+		details := resp.DetecResult.FaceList
 		for _, d := range details {
-			fmt.Println(d.location)
+			fmt.Println(d.Location)
 			//rotrect := gocv.RotatedRect{nil,nil,image.Point{loc.Left,loc.Top},loc.width,loc.height,loc.rotation}
 
 			//gocv.Rectangle(&img, image.Rect(loc.Left,loc.Top,loc.width+loc.Left,loc.height+loc.Top), blue, 3)
@@ -99,29 +99,25 @@ func main() {
 	}
 }
 
-func callFaceDetecAPI(img gocv.Mat) Response {
+func callFaceDetecAPI(img gocv.Mat) MyResponse {
 
-	url := "https://aip.baidubce.com/rest/2.0/face/v3/detect?access_token=24.455a0daccbd329c48d63307cfc3ac5f8.2592000.1563431485.282335-16550271"
+	URL := "https://aip.baidubce.com/rest/2.0/face/v3/detect?access_token=24.455a0daccbd329c48d63307cfc3ac5f8.2592000.1563431485.282335-16550271"
 
-	payload := base64.StdEncoding.EncodeToString(img.ToBytes())
+	imgBase64 := url.QueryEscape(base64.StdEncoding.EncodeToString(img.ToBytes()))
 
-	req, _ := http.NewRequest("POST", url, strings.NewReader("image_type=BASE64&image="+payload))
+	payload := strings.NewReader("image_type=BASE64&image=" + imgBase64)
+
+	req, _ := http.NewRequest("POST", URL, payload)
 
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
+	req.Header.Add("Accept-Type", "application/json")
 
 	res, _ := http.DefaultClient.Do(req)
 
 	defer res.Body.Close()
 
-	// read json http response
-	jsonDataFromHttp, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	var resp Response
-	err = json.Unmarshal(jsonDataFromHttp, &resp)
+	var resp MyResponse
+	err := json.NewDecoder(res.Body).Decode(&resp)
 	if err != nil {
 		panic(err)
 	}
