@@ -102,9 +102,9 @@ func main() {
 
 func callFaceDetecAPI(img gocv.Mat) MyResponse {
 
-	imgBase64 := url.QueryEscape(base64.StdEncoding.EncodeToString(img.ToBytes()))
+	buf, err := gocv.IMEncode(".jpg", img)
 
-	fmt.Println(imgBase64)
+	imgBase64 := url.QueryEscape(base64.StdEncoding.EncodeToString(buf))
 
 	payload := strings.NewReader("image_type=BASE64&image=" + imgBase64)
 
@@ -118,7 +118,7 @@ func callFaceDetecAPI(img gocv.Mat) MyResponse {
 	defer res.Body.Close()
 
 	var resp MyResponse
-	err := json.NewDecoder(res.Body).Decode(&resp)
+	err = json.NewDecoder(res.Body).Decode(&resp)
 	if err != nil {
 		panic(err)
 	}
