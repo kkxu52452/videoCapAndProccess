@@ -44,13 +44,13 @@ func main() {
 	deviceID := os.Args[1]
 	//saveFile := os.Args[2]
 
-	// open webcam
-	webcam, err := gocv.OpenVideoCapture(deviceID)
-	if err != nil {
-		fmt.Printf("error opening video capture device: %v\n", deviceID)
-		return
-	}
-	defer webcam.Close()
+	//// open webcam
+	//webcam, err := gocv.OpenVideoCapture(deviceID)
+	//if err != nil {
+	//	fmt.Printf("error opening video capture device: %v\n", deviceID)
+	//	return
+	//}
+	//defer webcam.Close()
 
 	// prepare image matrix
 	img := gocv.NewMat()
@@ -73,6 +73,13 @@ func main() {
 
 	fmt.Printf("Start reading device: %v\n", deviceID)
 	for i := 0; i < 100; i++ {
+		// open webcam each time
+		webcam, err := gocv.OpenVideoCapture(deviceID)
+		if err != nil {
+			fmt.Printf("error opening video capture device: %v\n", deviceID)
+			return
+		}
+
 		if ok := webcam.Read(&img); !ok {
 			fmt.Printf("Device closed: %v\n", deviceID)
 			return
@@ -81,6 +88,7 @@ func main() {
 			continue
 		}
 
+		webcam.Close()
 		// detect faces
 		resp := callFaceDetecAPI(img)
 		fmt.Printf("Face Detect Result#%d: %s\n", i, resp.ReturnMsg)
