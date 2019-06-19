@@ -42,7 +42,7 @@ func main() {
 
 	// parse args
 	deviceID := os.Args[1]
-	saveFile := os.Args[2]
+	//saveFile := os.Args[2]
 
 	// open webcam
 	webcam, err := gocv.OpenVideoCapture(deviceID)
@@ -56,20 +56,20 @@ func main() {
 	img := gocv.NewMat()
 	defer img.Close()
 
-	if ok := webcam.Read(&img); !ok {
-		fmt.Printf("Cannot read device %v\n", deviceID)
-		return
-	}
+	//if ok := webcam.Read(&img); !ok {
+	//	fmt.Printf("Cannot read device %v\n", deviceID)
+	//	return
+	//}
 
 	//color for the rect when faces detected
 	blue := color.RGBA{0, 0, 255, 0}
 
-	writer, err := gocv.VideoWriterFile(saveFile, "MJPG", 25, img.Cols(), img.Rows(), true)
-	if err != nil {
-		fmt.Printf("error opening video writer device: %v\n", saveFile)
-		return
-	}
-	defer writer.Close()
+	//writer, err := gocv.VideoWriterFile(saveFile, "MJPG", 25, img.Cols(), img.Rows(), true)
+	//if err != nil {
+	//	fmt.Printf("error opening video writer device: %v\n", saveFile)
+	//	return
+	//}
+	//defer writer.Close()
 
 	fmt.Printf("Start reading device: %v\n", deviceID)
 	for i := 0; i < 100; i++ {
@@ -99,8 +99,9 @@ func main() {
 
 			//gocv.PutText(&img, "Human", pt, gocv.FontHersheyPlain, 1.2, blue, 2)
 		}
-
-		writer.Write(img)
+		picName := fmt.Sprintf("%d.jpg", i)
+		gocv.IMWrite(picName, img)
+		//writer.Write(img)
 	}
 }
 
