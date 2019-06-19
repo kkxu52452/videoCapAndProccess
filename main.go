@@ -55,6 +55,11 @@ func main() {
 	img := gocv.NewMat()
 	defer img.Close()
 
+	if ok := webcam.Read(&img); !ok {
+		fmt.Printf("Cannot read device %v\n", deviceID)
+		return
+	}
+
 	// color for the rect when faces detected
 	blue := color.RGBA{0, 0, 255, 0}
 
