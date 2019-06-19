@@ -85,8 +85,10 @@ func main() {
 		resp := callFaceDetecAPI(img)
 		fmt.Printf("Face Detect Result#%d: %s\n", i, resp.ReturnMsg)
 
+		picName := fmt.Sprintf("%d.jpg", i)
 		if len(resp.DetecResult.FaceList) == 0 {
 			gocv.PutText(&img, resp.ReturnMsg, image.Point{50, 50}, gocv.FontHersheyPlain, 1.2, blue, 2)
+			gocv.IMWrite(picName, img)
 			continue
 		}
 		// draw a rectangle around each face on the original image,
@@ -99,7 +101,7 @@ func main() {
 
 			//gocv.PutText(&img, "Human", pt, gocv.FontHersheyPlain, 1.2, blue, 2)
 		}
-		picName := fmt.Sprintf("%d.jpg", i)
+
 		gocv.IMWrite(picName, img)
 		//writer.Write(img)
 	}
