@@ -105,9 +105,10 @@ func callFaceDetecAPI(img gocv.Mat) Response {
 
 	payload := base64.StdEncoding.EncodeToString(img.ToBytes())
 
-	req, _ := http.NewRequest("POST", url, strings.NewReader(payload))
+	req, _ := http.NewRequest("POST", url, strings.NewReader("image_type=BASE64&image="+payload))
 
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
 
 	res, _ := http.DefaultClient.Do(req)
 
