@@ -34,6 +34,7 @@ type MyResponse struct {
 	DetecResult Result  `json:"result"`
 }
 
+const URL = "https://aip.baidubce.com/rest/2.0/face/v3/detect?access_token=24.455a0daccbd329c48d63307cfc3ac5f8.2592000.1563431485.282335-16550271"
 
 func main() {
 
@@ -101,9 +102,9 @@ func main() {
 
 func callFaceDetecAPI(img gocv.Mat) MyResponse {
 
-	URL := "https://aip.baidubce.com/rest/2.0/face/v3/detect?access_token=24.455a0daccbd329c48d63307cfc3ac5f8.2592000.1563431485.282335-16550271"
-
 	imgBase64 := url.QueryEscape(base64.StdEncoding.EncodeToString(img.ToBytes()))
+
+	fmt.Println(imgBase64)
 
 	payload := strings.NewReader("image_type=BASE64&image=" + imgBase64)
 
