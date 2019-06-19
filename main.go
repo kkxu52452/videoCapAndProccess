@@ -122,7 +122,7 @@ func callFaceDetecAPI(img gocv.Mat) Response {
 	}
 
 	var resp Response
-	err = json.Unmarshal(jsonDataFromHttp, resp)
+	err = json.Unmarshal(jsonDataFromHttp, &resp)
 	if err != nil {
 		panic(err)
 	}
