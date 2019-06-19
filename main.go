@@ -4,6 +4,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"image"
+	"image/color"
 	"net/http"
 	"net/url"
 	"os"
@@ -40,7 +42,7 @@ func main() {
 
 	// parse args
 	deviceID := os.Args[1]
-	//saveFile := os.Args[2]
+	saveFile := os.Args[2]
 
 	// open webcam
 	webcam, err := gocv.OpenVideoCapture(deviceID)
@@ -54,20 +56,20 @@ func main() {
 	img := gocv.NewMat()
 	defer img.Close()
 
-	//if ok := webcam.Read(&img); !ok {
-	//	fmt.Printf("Cannot read device %v\n", deviceID)
-	//	return
-	//}
+	if ok := webcam.Read(&img); !ok {
+		fmt.Printf("Cannot read device %v\n", deviceID)
+		return
+	}
 
-	// color for the rect when faces detected
-	//blue := color.RGBA{0, 0, 255, 0}
+	//color for the rect when faces detected
+	blue := color.RGBA{0, 0, 255, 0}
 
-	//writer, err := gocv.VideoWriterFile(saveFile, "MJPG", 25, img.Cols(), img.Rows(), true)
-	//if err != nil {
-	//	fmt.Printf("error opening video writer device: %v\n", saveFile)
-	//	return
-	//}
-	//defer writer.Close()
+	writer, err := gocv.VideoWriterFile(saveFile, "MJPG", 25, img.Cols(), img.Rows(), true)
+	if err != nil {
+		fmt.Printf("error opening video writer device: %v\n", saveFile)
+		return
+	}
+	defer writer.Close()
 
 	fmt.Printf("Start reading device: %v\n", deviceID)
 	for i := 0; i < 100; i++ {
@@ -81,22 +83,24 @@ func main() {
 
 		// detect faces
 		resp := callFaceDetecAPI(img)
-		fmt.Printf("Face Detect Result#%d: %s", i, resp.ReturnMsg)
+		fmt.Printf("Face Detect Result#%d: %s\n", i, resp.ReturnMsg)
 
+		if len(resp.DetecResult.FaceList) == 0 {
+			gocv.PutText(&img, resp.ReturnMsg, image.Point{50, 50}, gocv.FontHersheyPlain, 1.2, blue, 2)
+			continue
+		}
 		// draw a rectangle around each face on the original image,
 		// along with
 		details := resp.DetecResult.FaceList
 		for _, d := range details {
-			fmt.Println(d.Location)
-			//rotrect := gocv.RotatedRect{nil,nil,image.Point{loc.Left,loc.Top},loc.width,loc.height,loc.rotation}
+			loc := d.Location
 
-			//gocv.Rectangle(&img, image.Rect(loc.Left,loc.Top,loc.width+loc.Left,loc.height+loc.Top), blue, 3)
-			//size := gocv.GetTextSize("Human", gocv.FontHersheyPlain, 1.2, 2)
-			//pt := image.Pt(r.Min.X+(r.Min.X/2)-(size.X/2), r.Min.Y-2)
+			gocv.Rectangle(&img, image.Rect(int(loc.Left),int(loc.Top),int(loc.Width+loc.Left),int(loc.Height+loc.Top)), blue, 3)
+
 			//gocv.PutText(&img, "Human", pt, gocv.FontHersheyPlain, 1.2, blue, 2)
 		}
 
-		//writer.Write(img)
+		writer.Write(img)
 	}
 }
 
