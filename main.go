@@ -51,10 +51,6 @@ func main() {
 	}
 	defer webcam.Close()
 
-	// open display window
-	window := gocv.NewWindow("Face Detect")
-	defer window.Close()
-
 	// prepare image matrix
 	img := gocv.NewMat()
 	defer img.Close()
@@ -81,7 +77,7 @@ func main() {
 
 		// detect faces
 		resp := callFaceDetecAPI(img)
-		fmt.Printf("Face Detect: %s", resp.ReturnMsg)
+		//fmt.Printf("Face Detect: %s", resp.ReturnMsg)
 
 		// draw a rectangle around each face on the original image,
 		// along with
