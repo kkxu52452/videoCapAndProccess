@@ -44,13 +44,19 @@ func main() {
 	deviceID := os.Args[1]
 	//saveFile := os.Args[2]
 
-	//// open webcam
-	//webcam, err := gocv.OpenVideoCapture(deviceID)
-	//if err != nil {
-	//	fmt.Printf("error opening video capture device: %v\n", deviceID)
-	//	return
-	//}
-	//defer webcam.Close()
+	// open webcam
+	webcam, err := gocv.OpenVideoCapture(deviceID)
+	if err != nil {
+		fmt.Printf("error opening video capture device: %v\n", deviceID)
+		return
+	}
+	defer webcam.Close()
+
+	go func() {
+		for {
+			webcam.Grab(1)
+		}
+	}()
 
 	// prepare image matrix
 	img := gocv.NewMat()
@@ -73,12 +79,6 @@ func main() {
 
 	fmt.Printf("Start reading device: %v\n", deviceID)
 	for i := 0; i < 100; i++ {
-		// open webcam each time
-		webcam, err := gocv.OpenVideoCapture(deviceID)
-		if err != nil {
-			fmt.Printf("error opening video capture device: %v\n", deviceID)
-			return
-		}
 
 		if ok := webcam.Read(&img); !ok {
 			fmt.Printf("Device closed: %v\n", deviceID)
@@ -88,7 +88,6 @@ func main() {
 			continue
 		}
 
-		webcam.Close()
 		// detect faces
 		resp := callFaceDetecAPI(img)
 		fmt.Printf("Face Detect Result#%d: %s\n", i, resp.ReturnMsg)
@@ -119,6 +118,7 @@ func callFaceDetecAPI(img gocv.Mat) MyResponse {
 
 	buf, err := gocv.IMEncode(".jpg", img)
 
+	// Thanks to Billzong, without his help I couldn't solve this problem.
 	imgBase64 := url.QueryEscape(base64.StdEncoding.EncodeToString(buf))
 
 	payload := strings.NewReader("image_type=BASE64&image=" + imgBase64)
