@@ -86,31 +86,31 @@ func main() {
 	//
 	go func() {
 		// Total time used on reading images from webcam
-		var sum 	int64
-		var count 	int64
-		var start	time.Time
-		var elapsed time.Duration
+		//var sum 	int64
+		//var count 	int64
+		//var start	time.Time
+		//var elapsed time.Duration
 		for {
-			start = time.Now()
+			//start = time.Now()
 			mutex.Lock()
 			if ok := webcam.Read(&img); !ok {
 				fmt.Printf("Device closed: %v\n", deviceID)
 				return
 			}
 			mutex.Unlock()
-			elapsed = time.Since(start)
-
-			sum = sum + elapsed.Nanoseconds()
-			count++
-			//time.Sleep(500 * time.Millisecond)
-			fmt.Printf("[MEASURE]Average time of reading a image: %d ms\n", sum/count/1000000)
+			//elapsed = time.Since(start)
+			//
+			//sum = sum + elapsed.Nanoseconds()
+			//count++
+			////time.Sleep(500 * time.Millisecond)
+			//fmt.Printf("[MEASURE]Average time of reading a image: %d ms\n", sum/count/1000000)
 		}
 	}()
 
-	// make sure that the goroutine execute at least once before going on
+	// make sure that the goroutine executes at least once before going on
 	time.Sleep(500 * time.Millisecond)
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 50; i++ {
 
 		//if ok := webcam.Read(&img); !ok {
 		//	fmt.Printf("Device closed: %v\n", deviceID)
@@ -122,16 +122,16 @@ func main() {
 
 		imgCopy := img.Clone()
 
+		picName := fmt.Sprintf("%d.jpg", i)
 		// detect faces
 		start := time.Now()
 		resp := callFaceDetecAPI(imgCopy)
 
-		fmt.Printf("Face Detect Result#%d: %s\n", i, resp.ReturnMsg)
-		picName := fmt.Sprintf("%d.jpg", i)
+		//fmt.Printf("Face Detect Result#%d: %s\n", i, resp.ReturnMsg)
+		elapsed := time.Since(start)
+		imgText := fmt.Sprintf("Result: %s, Time Consumed: %s, Current Time: %s", resp.ReturnMsg, elapsed, time.Now().UTC())
 
 		if len(resp.DetecResult.FaceList) == 0 {
-			elapsed := time.Since(start)
-			imgText := fmt.Sprintf("Result: %s, Time Consumed: %s", resp.ReturnMsg, elapsed)
 			gocv.PutText(&imgCopy, imgText, image.Point{50, 50}, gocv.FontHersheyPlain, 1.8, blue, 2)
 			gocv.IMWrite(picName, imgCopy)
 			continue
@@ -141,8 +141,6 @@ func main() {
 		details := resp.DetecResult.FaceList
 		for _, d := range details {
 			loc := d.Location
-			elapsed := time.Since(start)
-			imgText := fmt.Sprintf("Result: %s, Time Consumed: %s", resp.ReturnMsg, elapsed)
 			gocv.PutText(&imgCopy, imgText, image.Point{50, 50}, gocv.FontHersheyPlain, 1.8, blue, 2)
 			gocv.Rectangle(&imgCopy, image.Rect(int(loc.Left),int(loc.Top),int(loc.Width+loc.Left),int(loc.Height+loc.Top)), blue, 3)
 
