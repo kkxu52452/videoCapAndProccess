@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"gocv.io/x/gocv"
@@ -53,15 +54,18 @@ func main() {
 	}
 	defer webcam.Close()
 
-	go func() {
-		for {
-			webcam.Grab(1)
-		}
-	}()
+	//go func() {
+	//	for {
+	//		webcam.Grab(1)
+	//	}
+	//}()
 
 	// prepare image matrix
 	img := gocv.NewMat()
 	defer img.Close()
+
+	// use a mutex to safely access img across multiple goroutines
+	var mutex = &sync.Mutex{}
 
 	//if ok := webcam.Read(&img); !ok {
 	//	fmt.Printf("Cannot read device %v\n", deviceID)
@@ -79,27 +83,54 @@ func main() {
 	//defer writer.Close()
 
 	fmt.Printf("Start reading device: %v\n", deviceID)
+	//
+	go func() {
+		// Total time used on reading images from webcam
+		var sum 	int64
+		var count 	int64
+		var start	time.Time
+		var elapsed time.Duration
+		for {
+			start = time.Now()
+			mutex.Lock()
+			if ok := webcam.Read(&img); !ok {
+				fmt.Printf("Device closed: %v\n", deviceID)
+				return
+			}
+			mutex.Unlock()
+			elapsed = time.Since(start)
+
+			sum = sum + elapsed.Nanoseconds()
+			count++
+			//time.Sleep(500 * time.Millisecond)
+			fmt.Printf("Average time of reading a image: %d ms", sum/count/1000000)
+		}
+	}()
+
 	for i := 0; i < 100; i++ {
 
-		if ok := webcam.Read(&img); !ok {
-			fmt.Printf("Device closed: %v\n", deviceID)
-			return
-		}
+		//if ok := webcam.Read(&img); !ok {
+		//	fmt.Printf("Device closed: %v\n", deviceID)
+		//	return
+		//}
 		if img.Empty() {
 			continue
 		}
 
+		imgCopy := img.Clone()
+
 		// detect faces
 		start := time.Now()
-		resp := callFaceDetecAPI(img)
-		fmt.Printf("Face Detect Result#%d: %s\n", i, resp.ReturnMsg)
+		resp := callFaceDetecAPI(imgCopy)
 
+		fmt.Printf("Face Detect Result#%d: %s\n", i, resp.ReturnMsg)
 		picName := fmt.Sprintf("%d.jpg", i)
+
 		if len(resp.DetecResult.FaceList) == 0 {
 			elapsed := time.Since(start)
-			imgText := fmt.Sprintf("Result: %s, Time: %s", resp.ReturnMsg, elapsed)
-			gocv.PutText(&img, imgText, image.Point{50, 50}, gocv.FontHersheyPlain, 1.8, blue, 2)
-			gocv.IMWrite(picName, img)
+			imgText := fmt.Sprintf("Result: %s, Time Consumed: %s", resp.ReturnMsg, elapsed)
+			gocv.PutText(&imgCopy, imgText, image.Point{50, 50}, gocv.FontHersheyPlain, 1.8, blue, 2)
+			gocv.IMWrite(picName, imgCopy)
 			continue
 		}
 		// draw a rectangle around each face on the original image,
@@ -108,14 +139,14 @@ func main() {
 		for _, d := range details {
 			loc := d.Location
 			elapsed := time.Since(start)
-			imgText := fmt.Sprintf("Result: %s, Time: %s", resp.ReturnMsg, elapsed)
-			gocv.PutText(&img, imgText, image.Point{50, 50}, gocv.FontHersheyPlain, 1.8, blue, 2)
-			gocv.Rectangle(&img, image.Rect(int(loc.Left),int(loc.Top),int(loc.Width+loc.Left),int(loc.Height+loc.Top)), blue, 3)
+			imgText := fmt.Sprintf("Result: %s, Time Consumed: %s", resp.ReturnMsg, elapsed)
+			gocv.PutText(&imgCopy, imgText, image.Point{50, 50}, gocv.FontHersheyPlain, 1.8, blue, 2)
+			gocv.Rectangle(&imgCopy, image.Rect(int(loc.Left),int(loc.Top),int(loc.Width+loc.Left),int(loc.Height+loc.Top)), blue, 3)
 
 			//gocv.PutText(&img, "Human", pt, gocv.FontHersheyPlain, 1.2, blue, 2)
 		}
 
-		gocv.IMWrite(picName, img)
+		gocv.IMWrite(picName, imgCopy)
 		//writer.Write(img)
 	}
 }
