@@ -107,6 +107,9 @@ func main() {
 		}
 	}()
 
+	// make sure that the goroutine execute at least once before going on
+	time.Sleep(500 * time.Millisecond)
+
 	for i := 0; i < 100; i++ {
 
 		//if ok := webcam.Read(&img); !ok {
