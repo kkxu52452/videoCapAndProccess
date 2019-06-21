@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"gocv.io/x/gocv"
 )
@@ -89,21 +90,26 @@ func main() {
 		}
 
 		// detect faces
+		start := time.Now()
 		resp := callFaceDetecAPI(img)
 		fmt.Printf("Face Detect Result#%d: %s\n", i, resp.ReturnMsg)
 
 		picName := fmt.Sprintf("%d.jpg", i)
 		if len(resp.DetecResult.FaceList) == 0 {
-			gocv.PutText(&img, resp.ReturnMsg, image.Point{50, 50}, gocv.FontHersheyPlain, 1.2, blue, 2)
+			elapsed := time.Since(start)
+			imgText := fmt.Sprintf("Result: %s, Time: %s", resp.ReturnMsg, elapsed)
+			gocv.PutText(&img, imgText, image.Point{50, 50}, gocv.FontHersheyPlain, 1.8, blue, 2)
 			gocv.IMWrite(picName, img)
 			continue
 		}
 		// draw a rectangle around each face on the original image,
-		// along with
+		// along with time elapsed
 		details := resp.DetecResult.FaceList
 		for _, d := range details {
 			loc := d.Location
-
+			elapsed := time.Since(start)
+			imgText := fmt.Sprintf("Result: %s, Time: %s", resp.ReturnMsg, elapsed)
+			gocv.PutText(&img, imgText, image.Point{50, 50}, gocv.FontHersheyPlain, 1.8, blue, 2)
 			gocv.Rectangle(&img, image.Rect(int(loc.Left),int(loc.Top),int(loc.Width+loc.Left),int(loc.Height+loc.Top)), blue, 3)
 
 			//gocv.PutText(&img, "Human", pt, gocv.FontHersheyPlain, 1.2, blue, 2)
@@ -116,6 +122,7 @@ func main() {
 
 func callFaceDetecAPI(img gocv.Mat) MyResponse {
 
+	// convert gocv.Mat to []byte
 	buf, err := gocv.IMEncode(".jpg", img)
 
 	// Thanks to Billzong, without his help I couldn't solve this problem.
