@@ -103,7 +103,7 @@ func main() {
 			sum = sum + elapsed.Nanoseconds()
 			count++
 			//time.Sleep(500 * time.Millisecond)
-			fmt.Printf("Average time of reading a image: %d ms", sum/count/1000000)
+			fmt.Printf("[MEASURE]Average time of reading a image: %d ms\n", sum/count/1000000)
 		}
 	}()
 
