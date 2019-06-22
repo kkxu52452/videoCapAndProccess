@@ -116,17 +116,10 @@ func main() {
 		// run a forward pass thru the network
 		prob := net.Forward("")
 
-		if prob.Total() == 0 {
-			elapsed := time.Since(start)
-			imgText := fmt.Sprintf("Found no face in the Image; Time Consumed: %s; Current Time: %s", elapsed, time.Now().UTC())
-			gocv.PutText(&imgCopy, imgText, image.Point{50, 50}, gocv.FontHersheyPlain, 1.8, blue, 2)
-			gocv.IMWrite(picName, imgCopy)
-			continue
-		}
+		count := performDetection(&imgCopy, prob)
 
-		performDetection(&imgCopy, prob)
 		elapsed := time.Since(start)
-		imgText := fmt.Sprintf("Found %d face in the Image; Time Consumed: %s; Current Time: %s", prob.Total(), elapsed, time.Now().UTC())
+		imgText := fmt.Sprintf("Found %d face in the Image; Time Consumed: %s; Current Time: %s", count, elapsed, time.Now().UTC())
 		gocv.PutText(&imgCopy, imgText, image.Point{50, 50}, gocv.FontHersheyPlain, 1.8, blue, 2)
 		gocv.IMWrite(picName, imgCopy)
 
@@ -145,10 +138,13 @@ func main() {
 // where N is the number of detections, and each detection
 // is a vector of float values
 // [batchId, classId, confidence, left, top, right, bottom]
-func performDetection(frame *gocv.Mat, results gocv.Mat) {
+func performDetection(frame *gocv.Mat, results gocv.Mat) int {
+	var count int   // number of faces
+
 	for i := 0; i < results.Total(); i += 7 {
 		confidence := results.GetFloatAt(0, i+2)
 		if confidence > 0.5 {
+			count++
 			left := int(results.GetFloatAt(0, i+3) * float32(frame.Cols()))
 			top := int(results.GetFloatAt(0, i+4) * float32(frame.Rows()))
 			right := int(results.GetFloatAt(0, i+5) * float32(frame.Cols()))
@@ -156,5 +152,7 @@ func performDetection(frame *gocv.Mat, results gocv.Mat) {
 			gocv.Rectangle(frame, image.Rect(left, top, right, bottom), color.RGBA{0, 255, 0, 0}, 2)
 		}
 	}
+
+	return count
 }
 
