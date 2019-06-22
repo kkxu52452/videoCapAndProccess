@@ -1,4 +1,4 @@
-package main
+package baiduFaceAPI
 
 import (
 	"encoding/base64"
