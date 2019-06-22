@@ -34,7 +34,7 @@ type Result struct {
 }
 
 type MyResponse struct {
-	ReturnMsg string 	`json:"error_msg"`
+	ReturnMsg 	string 	`json:"error_msg"`
 	DetecResult Result  `json:"result"`
 }
 
@@ -54,17 +54,11 @@ func main() {
 	}
 	defer webcam.Close()
 
-	//go func() {
-	//	for {
-	//		webcam.Grab(1)
-	//	}
-	//}()
-
 	// prepare image matrix
 	img := gocv.NewMat()
 	defer img.Close()
 
-	// use a mutex to safely access img across multiple goroutines
+	// use a mutex to safely access 'img' across multiple goroutines
 	var mutex = &sync.Mutex{}
 
 	//if ok := webcam.Read(&img); !ok {
@@ -83,10 +77,10 @@ func main() {
 	//defer writer.Close()
 
 	fmt.Printf("Start reading device: %v\n", deviceID)
-	//
+	// read frame continuously to keep buffer updated
 	go func() {
-		//Total time used on reading images from webcam
-		var sum 	int64
+
+		var sum 	int64  			//Total time used on reading images from webcam
 		var count 	int64
 		var start	time.Time
 		var elapsed time.Duration
@@ -102,8 +96,8 @@ func main() {
 
 			sum = sum + elapsed.Nanoseconds()
 			count++
-			//time.Sleep(500 * time.Millisecond)
-			fmt.Printf("[MEASURE]Average time of reading a image: %d ms\n", sum/count/1000000)
+			//time.Sleep(200 * time.Millisecond)
+			//fmt.Printf("[MEASURE]Average time of reading a image: %d ms\n", sum/count/1000000)
 		}
 	}()
 
@@ -121,9 +115,9 @@ func main() {
 		}
 
 		imgCopy := img.Clone()
-
+		// for output
 		picName := fmt.Sprintf("%d.jpg", i)
-		// detect faces
+		// detect faces and measure the time of API call
 		start := time.Now()
 		resp := callFaceDetecAPI(imgCopy)
 
@@ -131,13 +125,13 @@ func main() {
 		elapsed := time.Since(start)
 		imgText := fmt.Sprintf("Result: %s, Time Consumed: %s, Current Time: %s", resp.ReturnMsg, elapsed, time.Now().UTC())
 
+		// if there is no face in the img
 		if len(resp.DetecResult.FaceList) == 0 {
 			gocv.PutText(&imgCopy, imgText, image.Point{50, 50}, gocv.FontHersheyPlain, 1.8, blue, 2)
 			gocv.IMWrite(picName, imgCopy)
 			continue
 		}
-		// draw a rectangle around each face on the original image,
-		// along with time elapsed
+		// otherwise, draw a rectangle around each face on the image
 		details := resp.DetecResult.FaceList
 		for _, d := range details {
 			loc := d.Location
@@ -146,7 +140,6 @@ func main() {
 
 			//gocv.PutText(&img, "Human", pt, gocv.FontHersheyPlain, 1.2, blue, 2)
 		}
-
 		gocv.IMWrite(picName, imgCopy)
 		//writer.Write(img)
 	}
@@ -154,7 +147,7 @@ func main() {
 
 func callFaceDetecAPI(img gocv.Mat) MyResponse {
 
-	// convert gocv.Mat to []byte
+	// encodes an image Mat into a memory buffer using the image format passed in
 	buf, err := gocv.IMEncode(".jpg", img)
 
 	// Thanks to Billzong, without his help I couldn't solve this problem.
