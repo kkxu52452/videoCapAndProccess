@@ -38,7 +38,7 @@ type MyResponse struct {
 	DetecResult Result  `json:"result"`
 }
 
-const URL = "https://aip.baidubce.com/rest/2.0/face/v3/detect?access_token=24.455a0daccbd329c48d63307cfc3ac5f8.2592000.1563431485.282335-16550271"
+const Baidu_URL = "https://aip.baidubce.com/rest/2.0/face/v3/detect?access_token=24.455a0daccbd329c48d63307cfc3ac5f8.2592000.1563431485.282335-16550271"
 
 func main() {
 
@@ -115,11 +115,12 @@ func main() {
 		}
 
 		imgCopy := img.Clone()
+		imgBytes := imgCopy.ToBytes()
 		// for output
 		picName := fmt.Sprintf("%d.jpg", i)
 		// detect faces and measure the time of API call
 		start := time.Now()
-		resp := callFaceDetecAPI(imgCopy)
+		resp := callFaceDetecAPI(imgBytes)
 
 		//fmt.Printf("Face Detect Result#%d: %s\n", i, resp.ReturnMsg)
 		elapsed := time.Since(start)
@@ -145,17 +146,17 @@ func main() {
 	}
 }
 
-func callFaceDetecAPI(img gocv.Mat) MyResponse {
+func callFaceDetecAPI(img []byte) MyResponse {
 
 	// encodes an image Mat into a memory buffer using the image format passed in
-	buf, err := gocv.IMEncode(".jpg", img)
+	//buf, err := gocv.IMEncode(".jpg", img)
 
 	// Thanks to Billzong, without his help I couldn't solve this problem.
-	imgBase64 := url.QueryEscape(base64.StdEncoding.EncodeToString(buf))
+	imgBase64 := url.QueryEscape(base64.StdEncoding.EncodeToString(img))
 
 	payload := strings.NewReader("image_type=BASE64&image=" + imgBase64)
 
-	req, _ := http.NewRequest("POST", URL, payload)
+	req, _ := http.NewRequest("POST", Baidu_URL, payload)
 
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Accept-Type", "application/json")
@@ -165,7 +166,7 @@ func callFaceDetecAPI(img gocv.Mat) MyResponse {
 	defer res.Body.Close()
 
 	var resp MyResponse
-	err = json.NewDecoder(res.Body).Decode(&resp)
+	err := json.NewDecoder(res.Body).Decode(&resp)
 	if err != nil {
 		panic(err)
 	}
