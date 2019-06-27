@@ -43,7 +43,11 @@ type Result struct {
 
 type MyResponse struct {
 	ReturnMsg 	string 	`json:"error_msg"`
-	DetecResult Result  `json:"result"`
+	DetecResult Result  `json:"detec_result"`
+}
+
+type FromFDN struct {
+	DetecResult  MyResponse   `json:"detec_result"`
 }
 
 const FDN_URL = "https://c6d8574c-4545-4891-96e8-93751b4b0fea:y9bRMbeu1NmQCtzmKKOOxxRxLp8mkssYUrLHtFwrcRvlA7FTymfamtZeCKy9ku44@" +
@@ -129,7 +133,8 @@ func main() {
 
 		// detect faces and measure the time of API call
 		start := time.Now()
-		res := callFaceDetecAPI(imgCopy)
+		result := callFaceDetecAPI(imgCopy)
+		res := result.DetecResult
 		elapsed := time.Since(start)
 
 		imgText := fmt.Sprintf("Status: %s; Time Consumed: %s; Current Time: %s", res.ReturnMsg, elapsed, time.Now().UTC())
@@ -150,7 +155,7 @@ func main() {
 	}
 }
 
-func callFaceDetecAPI(img gocv.Mat) MyResponse {
+func callFaceDetecAPI(img gocv.Mat) FromFDN {
 
 	// encodes an image Mat into a memory buffer using the image format pass in
 	buf, _ := gocv.IMEncode(".jpg", img)
@@ -167,13 +172,13 @@ func callFaceDetecAPI(img gocv.Mat) MyResponse {
 
 	res, _ := http.DefaultClient.Do(req)
 
-	var resp MyResponse
-	err := json.NewDecoder(res.Body).Decode(&resp)
+	var result FromFDN
+	err := json.NewDecoder(res.Body).Decode(&result)
 	if err != nil {
 		panic(err)
 	}
 
 	defer res.Body.Close()
 
-	return resp
+	return result
 }
