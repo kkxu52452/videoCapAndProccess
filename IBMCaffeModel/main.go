@@ -178,6 +178,8 @@ func callFaceDetecAPI(img gocv.Mat) FromFDN {
 		panic(err)
 	}
 
+	fmt.Println(result.DetecResult)
+
 	defer res.Body.Close()
 
 	return result
