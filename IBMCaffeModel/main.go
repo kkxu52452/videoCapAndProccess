@@ -128,17 +128,16 @@ func main() {
 		imgCopy := img.Clone()
 		// for output
 		picName := fmt.Sprintf("%d.jpg", i)
+
 		// detect faces and measure the time of API call
 		start := time.Now()
 		res := callFaceDetecAPI(imgCopy)
-
 		elapsed := time.Since(start)
 
 		imgText := fmt.Sprintf("Status: %s; Time Consumed: %s; Current Time: %s", res.ReturnMsg, elapsed, time.Now().UTC())
 		gocv.PutText(&imgCopy, imgText, image.Point{50, 50}, gocv.FontHersheyPlain, 1.8, blue, 2)
 		// if there is no face in the img
 		if len(res.DetecResult.FaceList) == 0 {
-			gocv.PutText(&imgCopy, imgText, image.Point{50, 50}, gocv.FontHersheyPlain, 1.8, blue, 2)
 			gocv.IMWrite(picName, imgCopy)
 			continue
 		}
@@ -146,7 +145,6 @@ func main() {
 		details := res.DetecResult.FaceList
 		for _, d := range details {
 			loc := d.Location
-			gocv.PutText(&imgCopy, imgText, image.Point{50, 50}, gocv.FontHersheyPlain, 1.8, blue, 2)
 			gocv.Rectangle(&imgCopy, image.Rect(int(loc.Left),int(loc.Top),int(loc.Width+loc.Left),int(loc.Height+loc.Top)), blue, 3)
 		}
 		// save as local image
@@ -156,7 +154,7 @@ func main() {
 
 func callFaceDetecAPI(img gocv.Mat) MyResponse {
 
-	// encodes an image Mat into a memory buffer using the image format passed in
+	// encodes an image Mat into a memory buffer using the image format pass in
 	buf, err := gocv.IMEncode(".jpg", img)
 
 	// Thanks to Billzong, without his help I couldn't solve this problem.
@@ -171,8 +169,6 @@ func callFaceDetecAPI(img gocv.Mat) MyResponse {
 
 	res, _ := http.DefaultClient.Do(req)
 
-	defer res.Body.Close()
-
 	var resp HTTPResponse
 	err = mapstructure.Decode(res, &resp)
 	if err != nil {
@@ -183,6 +179,8 @@ func callFaceDetecAPI(img gocv.Mat) MyResponse {
 	if err = json.Unmarshal(resp.Body, &result); err != nil {
 		panic(err)
 	}
+
+	defer res.Body.Close()
 
 	return result
 }
