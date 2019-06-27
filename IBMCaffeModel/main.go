@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -14,7 +15,6 @@ import (
 	"time"
 
 	"gocv.io/x/gocv"
-	"github.com/mitchellh/mapstructure"
 )
 
 // JSONMap is raw json object
@@ -169,14 +169,10 @@ func callFaceDetecAPI(img gocv.Mat) MyResponse {
 
 	res, _ := http.DefaultClient.Do(req)
 
-	var resp HTTPResponse
-	err = mapstructure.Decode(res, &resp)
-	if err != nil {
-		panic(err)
-	}
+	body, _ := ioutil.ReadAll(res.Body)
 
 	var result MyResponse
-	if err = json.Unmarshal(resp.Body, &result); err != nil {
+	if err = json.Unmarshal(body, &result); err != nil {
 		panic(err)
 	}
 
