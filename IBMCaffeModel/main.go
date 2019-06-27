@@ -2,13 +2,12 @@ package main
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
+	"github.com/mitchellh/mapstructure"
 	"image"
 	"image/color"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 	"sync"
@@ -155,16 +154,16 @@ func main() {
 func callFaceDetecAPI(img gocv.Mat) MyResponse {
 
 	// encodes an image Mat into a memory buffer using the image format pass in
-	buf, err := gocv.IMEncode(".jpg", img)
+	buf, _ := gocv.IMEncode(".jpg", img)
 
 	// Thanks to Billzong, without his help I couldn't solve this problem.
-	imgBase64 := url.QueryEscape(base64.StdEncoding.EncodeToString(buf))
+	imgBase64 := base64.StdEncoding.EncodeToString(buf)
 
 	payload := strings.NewReader("image_type=BASE64&image=" + imgBase64)
 
 	req, _ := http.NewRequest("POST", FDN_URL, payload)
 
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept-Type", "application/json")
 
 	res, _ := http.DefaultClient.Do(req)
@@ -172,7 +171,7 @@ func callFaceDetecAPI(img gocv.Mat) MyResponse {
 	body, _ := ioutil.ReadAll(res.Body)
 
 	var result MyResponse
-	if err = json.Unmarshal(body, &result); err != nil {
+	if err := mapstructure.Decode(body, &result); err != nil {
 		panic(err)
 	}
 
