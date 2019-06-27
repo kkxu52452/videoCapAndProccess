@@ -2,11 +2,10 @@ package main
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
-	"github.com/mitchellh/mapstructure"
 	"image"
 	"image/color"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
@@ -168,14 +167,13 @@ func callFaceDetecAPI(img gocv.Mat) MyResponse {
 
 	res, _ := http.DefaultClient.Do(req)
 
-	body, _ := ioutil.ReadAll(res.Body)
-
-	var result MyResponse
-	if err := mapstructure.Decode(body, &result); err != nil {
+	var resp MyResponse
+	err := json.NewDecoder(res.Body).Decode(&resp)
+	if err != nil {
 		panic(err)
 	}
 
 	defer res.Body.Close()
 
-	return result
+	return resp
 }
