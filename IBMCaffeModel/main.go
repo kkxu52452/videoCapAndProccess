@@ -140,12 +140,12 @@ func main() {
 		imgText := fmt.Sprintf("Status: %s; Time Consumed: %s; Current Time: %s", res.ReturnMsg, elapsed, time.Now().UTC())
 		gocv.PutText(&imgCopy, imgText, image.Point{50, 50}, gocv.FontHersheyPlain, 1.8, blue, 2)
 		// if there is no face in the img
-		if len(res.DetecResult.FaceList) == 0 {
+		if len(res.FaceResult.FaceList) == 0 {
 			gocv.IMWrite(picName, imgCopy)
 			continue
 		}
 		// otherwise, draw a rectangle around each face on the image
-		details := res.DetecResult.FaceList
+		details := res.FaceResult.FaceList
 		for _, d := range details {
 			loc := d.Location
 			gocv.Rectangle(&imgCopy, image.Rect(int(loc.Left),int(loc.Top),int(loc.Width+loc.Left),int(loc.Height+loc.Top)), blue, 3)
