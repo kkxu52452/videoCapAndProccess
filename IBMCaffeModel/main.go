@@ -43,11 +43,11 @@ type Result struct {
 
 type MyResponse struct {
 	ReturnMsg 	string 	`json:"error_msg"`
-	DetecResult Result  `json:"detec_result"`
+	FaceResult Result   `json:"result"`
 }
 
 type FromFDN struct {
-	DetecResult  MyResponse   `json:"detec_result"`
+	DetecResult  MyResponse  `json:"detec_result"`
 }
 
 const FDN_URL = "https://c6d8574c-4545-4891-96e8-93751b4b0fea:y9bRMbeu1NmQCtzmKKOOxxRxLp8mkssYUrLHtFwrcRvlA7FTymfamtZeCKy9ku44@" +
