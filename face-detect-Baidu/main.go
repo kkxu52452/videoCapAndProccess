@@ -114,12 +114,11 @@ func main() {
 		}
 
 		imgCopy := img.Clone()
-		imgBytes := imgCopy.ToBytes()
 		// for output
 		picName := fmt.Sprintf("%d.jpg", i)
 		// detect faces and measure the time of API call
 		start := time.Now()
-		resp := callFaceDetecAPI(imgBytes)
+		resp := callFaceDetecAPI(imgCopy)
 
 		//fmt.Printf("Face Detect Result#%d: %s\n", i, resp.ReturnMsg)
 		elapsed := time.Since(start)
@@ -145,13 +144,13 @@ func main() {
 	}
 }
 
-func callFaceDetecAPI(img []byte) MyResponse {
+func callFaceDetecAPI(img gocv.Mat) MyResponse {
 
 	// encodes an image Mat into a memory buffer using the image format passed in
 	//buf, err := gocv.IMEncode(".jpg", img)
 
 	// Thanks to Billzong, without his help I couldn't solve this problem.
-	imgBase64 := base64.StdEncoding.EncodeToString(img)
+	imgBase64 := base64.StdEncoding.EncodeToString(img.ToBytes())
 
 	payload := strings.NewReader("image_type=BASE64&image=" + imgBase64)
 
