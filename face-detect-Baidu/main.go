@@ -112,13 +112,11 @@ func main() {
 		if img.Empty() {
 			continue
 		}
-
-		imgCopy := img.Clone()
 		// for output
 		picName := fmt.Sprintf("%d.jpg", i)
 		// detect faces and measure the time of API call
 		start := time.Now()
-		resp := callFaceDetecAPI(imgCopy)
+		resp := callFaceDetecAPI(img)
 
 		//fmt.Printf("Face Detect Result#%d: %s\n", i, resp.ReturnMsg)
 		elapsed := time.Since(start)
@@ -126,20 +124,20 @@ func main() {
 
 		// if there is no face in the img
 		if len(resp.DetecResult.FaceList) == 0 {
-			gocv.PutText(&imgCopy, imgText, image.Point{50, 50}, gocv.FontHersheyPlain, 1.8, blue, 2)
-			gocv.IMWrite(picName, imgCopy)
+			gocv.PutText(&img, imgText, image.Point{50, 50}, gocv.FontHersheyPlain, 1.8, blue, 2)
+			gocv.IMWrite(picName, img)
 			continue
 		}
 		// otherwise, draw a rectangle around each face on the image
 		details := resp.DetecResult.FaceList
 		for _, d := range details {
 			loc := d.Location
-			gocv.PutText(&imgCopy, imgText, image.Point{50, 50}, gocv.FontHersheyPlain, 1.8, blue, 2)
-			gocv.Rectangle(&imgCopy, image.Rect(int(loc.Left),int(loc.Top),int(loc.Width+loc.Left),int(loc.Height+loc.Top)), blue, 3)
+			gocv.PutText(&img, imgText, image.Point{50, 50}, gocv.FontHersheyPlain, 1.8, blue, 2)
+			gocv.Rectangle(&img, image.Rect(int(loc.Left),int(loc.Top),int(loc.Width+loc.Left),int(loc.Height+loc.Top)), blue, 3)
 
 			//gocv.PutText(&img, "Human", pt, gocv.FontHersheyPlain, 1.2, blue, 2)
 		}
-		gocv.IMWrite(picName, imgCopy)
+		gocv.IMWrite(picName, img)
 		//writer.Write(img)
 	}
 }
