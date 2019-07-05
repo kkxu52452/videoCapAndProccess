@@ -7,7 +7,6 @@ import (
 	"image"
 	"image/color"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 	"sync"
