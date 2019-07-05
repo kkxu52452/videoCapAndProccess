@@ -146,6 +146,8 @@ func callFaceDetecAPI(imgBase64 string) MyResponse {
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Accept-Type", "application/json")
 
+	// check if new client is created every call, package FIN
+	// https://medium.com/@nate510/don-t-use-go-s-default-http-client-4804cb19f779
 	res, _ := http.DefaultClient.Do(req)
 
 	defer res.Body.Close()
