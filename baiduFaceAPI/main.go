@@ -44,7 +44,6 @@ func main() {
 
 	// parse args
 	deviceID := os.Args[1]
-	//saveFile := os.Args[2]
 
 	// open webcam
 	webcam, err := gocv.OpenVideoCapture(deviceID)
@@ -61,22 +60,11 @@ func main() {
 	// use a mutex to safely access 'img' across multiple goroutines
 	var mutex = &sync.Mutex{}
 
-	//if ok := webcam.Read(&img); !ok {
-	//	fmt.Printf("Cannot read device %v\n", deviceID)
-	//	return
-	//}
-
 	//color for the rect when faces detected
 	blue := color.RGBA{0, 0, 255, 0}
 
-	//writer, err := gocv.VideoWriterFile(saveFile, "MJPG", 25, img.Cols(), img.Rows(), true)
-	//if err != nil {
-	//	fmt.Printf("error opening video writer device: %v\n", saveFile)
-	//	return
-	//}
-	//defer writer.Close()
-
 	fmt.Printf("Start reading device: %v\n", deviceID)
+
 	// read frame continuously to keep buffer updated
 	go func() {
 
@@ -106,10 +94,6 @@ func main() {
 
 	for i := 0; i < 50; i++ {
 
-		//if ok := webcam.Read(&img); !ok {
-		//	fmt.Printf("Device closed: %v\n", deviceID)
-		//	return
-		//}
 		if img.Empty() {
 			continue
 		}
@@ -147,9 +131,6 @@ func main() {
 }
 
 func callFaceDetecAPI(img []byte) MyResponse {
-
-	// encodes an image Mat into a memory buffer using the image format passed in
-	//buf, err := gocv.IMEncode(".jpg", img)
 
 	// Thanks to Billzong, without his help I couldn't solve this problem.
 	imgBase64 := url.QueryEscape(base64.StdEncoding.EncodeToString(img))
