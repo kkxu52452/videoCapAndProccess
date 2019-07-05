@@ -111,7 +111,7 @@ func main() {
 
 		// convert image to base64 to send it with a json object
 		// Thanks to Billzong, without his help I couldn't solve this problem.
-		imgBase64 := url.QueryEscape(base64.StdEncoding.EncodeToString(imgBytes))
+		imgBase64 := base64.StdEncoding.EncodeToString(imgBytes)
 
 		// detect faces and measure the time of API call
 		start := time.Now()
