@@ -7,6 +7,7 @@ import (
 	"image"
 	"image/color"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"sync"
@@ -37,13 +38,16 @@ type MyResponse struct {
 	DetecResult Result  `json:"result"`
 }
 
+type Ret struct {
+	Body 	MyResponse 	`json:"body"`
+}
+
 const FDN_Baidu_URL = "https://47.106.30.3:31001/api/be7132bf-2708-49e7-882a-e61a3ead36b3/face-detect-Baidu/facedetec/face-detect-Baidu"
 
 func main() {
 
 	// parse args
 	deviceID := os.Args[1]
-	//saveFile := os.Args[2]
 
 	// open webcam
 	webcam, err := gocv.OpenVideoCapture(deviceID)
@@ -60,22 +64,11 @@ func main() {
 	// use a mutex to safely access 'img' across multiple goroutines
 	var mutex = &sync.Mutex{}
 
-	//if ok := webcam.Read(&img); !ok {
-	//	fmt.Printf("Cannot read device %v\n", deviceID)
-	//	return
-	//}
-
 	//color for the rect when faces detected
 	blue := color.RGBA{0, 0, 255, 0}
 
-	//writer, err := gocv.VideoWriterFile(saveFile, "MJPG", 25, img.Cols(), img.Rows(), true)
-	//if err != nil {
-	//	fmt.Printf("error opening video writer device: %v\n", saveFile)
-	//	return
-	//}
-	//defer writer.Close()
-
 	fmt.Printf("Start reading device: %v\n", deviceID)
+
 	// read frame continuously to keep buffer updated
 	go func() {
 
@@ -105,18 +98,24 @@ func main() {
 
 	for i := 0; i < 50; i++ {
 
-		//if ok := webcam.Read(&img); !ok {
-		//	fmt.Printf("Device closed: %v\n", deviceID)
-		//	return
-		//}
 		if img.Empty() {
 			continue
 		}
-		// for output
+
+		imgCopy := img.Clone()
+		// for local output
 		picName := fmt.Sprintf("%d.jpg", i)
+
+		// encode the img as a JPG image
+		imgBytes, _ := gocv.IMEncode(".jpg", imgCopy)
+
+		// convert image to base64 to send it with a json object
+		// Thanks to Billzong, without his help I couldn't solve this problem.
+		imgBase64 := url.QueryEscape(base64.StdEncoding.EncodeToString(imgBytes))
+
 		// detect faces and measure the time of API call
 		start := time.Now()
-		resp := callFaceDetecAPI(img)
+		resp := callFaceDetecAPI(imgBase64)
 
 		//fmt.Printf("Face Detect Result#%d: %s\n", i, resp.ReturnMsg)
 		elapsed := time.Since(start)
@@ -124,49 +123,44 @@ func main() {
 
 		// if there is no face in the img
 		if len(resp.DetecResult.FaceList) == 0 {
-			gocv.PutText(&img, imgText, image.Point{50, 50}, gocv.FontHersheyPlain, 1.8, blue, 2)
-			gocv.IMWrite(picName, img)
+			gocv.PutText(&imgCopy, imgText, image.Point{50, 50}, gocv.FontHersheyPlain, 1.8, blue, 2)
+			gocv.IMWrite(picName, imgCopy)
 			continue
 		}
 		// otherwise, draw a rectangle around each face on the image
 		details := resp.DetecResult.FaceList
 		for _, d := range details {
 			loc := d.Location
-			gocv.PutText(&img, imgText, image.Point{50, 50}, gocv.FontHersheyPlain, 1.8, blue, 2)
-			gocv.Rectangle(&img, image.Rect(int(loc.Left),int(loc.Top),int(loc.Width+loc.Left),int(loc.Height+loc.Top)), blue, 3)
+			gocv.PutText(&imgCopy, imgText, image.Point{50, 50}, gocv.FontHersheyPlain, 1.8, blue, 2)
+			gocv.Rectangle(&imgCopy, image.Rect(int(loc.Left),int(loc.Top),int(loc.Width+loc.Left),int(loc.Height+loc.Top)), blue, 3)
 
 			//gocv.PutText(&img, "Human", pt, gocv.FontHersheyPlain, 1.2, blue, 2)
 		}
-		gocv.IMWrite(picName, img)
+		gocv.IMWrite(picName, imgCopy)
 		//writer.Write(img)
 	}
 }
 
-func callFaceDetecAPI(img gocv.Mat) MyResponse {
+func callFaceDetecAPI(imgBase64 string) MyResponse {
 
-	// encodes an image Mat into a memory buffer using the image format passed in
-	//buf, err := gocv.IMEncode(".jpg", img)
-
-	// Thanks to Billzong, without his help I couldn't solve this problem.
-	imgBase64 := base64.StdEncoding.EncodeToString(img.ToBytes())
-
+	// request payload
 	payload := strings.NewReader("image_type=BASE64&image=" + imgBase64)
 
 	req, _ := http.NewRequest("POST", FDN_Baidu_URL, payload)
-
-	req.Header.Add("Content-Type","application/x-www-form-urlencoded")
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Accept-Type", "application/json")
 
+	// check if new client is created every call, package FIN
+	// https://medium.com/@nate510/don-t-use-go-s-default-http-client-4804cb19f779
 	res, _ := http.DefaultClient.Do(req)
 
 	defer res.Body.Close()
 
-	var resp MyResponse
-	err := json.NewDecoder(res.Body).Decode(&resp)
+	var ret Ret
+	err := json.NewDecoder(res.Body).Decode(&ret)
 	if err != nil {
 		panic(err)
 	}
 
-	return resp
+	return ret.Body
 }
-
