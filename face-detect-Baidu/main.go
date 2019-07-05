@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -60,6 +61,10 @@ func main() {
 	img := gocv.NewMat()
 	defer img.Close()
 
+	// disable security check on https for this client
+	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true},}
+	client := &http.Client{Transport: tr}
+
 	// use a mutex to safely access 'img' across multiple goroutines
 	var mutex = &sync.Mutex{}
 
@@ -114,7 +119,7 @@ func main() {
 
 		// detect faces and measure the time of API call
 		start := time.Now()
-		resp := callFaceDetecAPI(imgBase64)
+		resp := callFaceDetecAPI(client, imgBase64)
 
 		//fmt.Printf("Face Detect Result#%d: %s\n", i, resp.ReturnMsg)
 		elapsed := time.Since(start)
@@ -140,7 +145,7 @@ func main() {
 	}
 }
 
-func callFaceDetecAPI(imgBase64 string) MyResponse {
+func callFaceDetecAPI(client *http.Client, imgBase64 string) MyResponse {
 
 	// request payload
 	payload := strings.NewReader("image_type=BASE64&image=" + imgBase64)
@@ -151,7 +156,7 @@ func callFaceDetecAPI(imgBase64 string) MyResponse {
 
 	// check if new client is created every call, package FIN
 	// https://medium.com/@nate510/don-t-use-go-s-default-http-client-4804cb19f779
-	res, err := http.DefaultClient.Do(req)
+	res, err := client.Do(req)
 	if err != nil {
 		fmt.Println("[ERR] Do request failed!")
 		panic(err)
