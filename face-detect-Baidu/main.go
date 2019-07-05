@@ -38,7 +38,7 @@ type MyResponse struct {
 }
 
 type Ret struct {
-	Body 	MyResponse 	`json:"body"`
+	Recv 	MyResponse 	`json:"body"`
 }
 
 const FDN_Baidu_URL = "https://47.106.30.3:31001/api/be7132bf-2708-49e7-882a-e61a3ead36b3/face-detect-Baidu/facedetec/face-detect-Baidu"
@@ -153,13 +153,12 @@ func callFaceDetecAPI(imgBase64 string) MyResponse {
 	// https://medium.com/@nate510/don-t-use-go-s-default-http-client-4804cb19f779
 	res, _ := http.DefaultClient.Do(req)
 
-	defer res.Body.Close()
-
 	var ret Ret
 	err := json.NewDecoder(res.Body).Decode(&ret)
 	if err != nil {
 		panic(err)
 	}
+	res.Body.Close()
 
-	return ret.Body
+	return ret.Recv
 }
