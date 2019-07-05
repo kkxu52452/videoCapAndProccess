@@ -94,17 +94,19 @@ func main() {
 
 	for i := 0; i < 50; i++ {
 
+		fmt.Printf("[INFO]Start reading image #%d: %v\n", i, time.Now())
 		if img.Empty() {
 			continue
 		}
+		fmt.Printf("[INFO]Complete reading image #%d: %v\n", i, time.Now())
 
 		imgCopy := img.Clone()
-		imgBytes := imgCopy.ToBytes()
+		//imgBytes := imgCopy.ToBytes()
 		// for output
 		picName := fmt.Sprintf("%d.jpg", i)
 		// detect faces and measure the time of API call
 		start := time.Now()
-		resp := callFaceDetecAPI(imgBytes)
+		resp := callFaceDetecAPI(imgCopy)
 
 		//fmt.Printf("Face Detect Result#%d: %s\n", i, resp.ReturnMsg)
 		elapsed := time.Since(start)
@@ -130,10 +132,13 @@ func main() {
 	}
 }
 
-func callFaceDetecAPI(img []byte) MyResponse {
+func callFaceDetecAPI(img gocv.Mat) MyResponse {
+
+	// encode the img as a JPG image
+	imgBytes, _ := gocv.IMEncode(".jpg", img)
 
 	// Thanks to Billzong, without his help I couldn't solve this problem.
-	imgBase64 := url.QueryEscape(base64.StdEncoding.EncodeToString(img))
+	imgBase64 := url.QueryEscape(base64.StdEncoding.EncodeToString(imgBytes))
 
 	payload := strings.NewReader("image_type=BASE64&image=" + imgBase64)
 
