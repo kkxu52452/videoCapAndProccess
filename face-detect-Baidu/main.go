@@ -151,14 +151,22 @@ func callFaceDetecAPI(imgBase64 string) MyResponse {
 
 	// check if new client is created every call, package FIN
 	// https://medium.com/@nate510/don-t-use-go-s-default-http-client-4804cb19f779
-	res, _ := http.DefaultClient.Do(req)
-
-	var ret Ret
-	err := json.NewDecoder(res.Body).Decode(&ret)
+	res, err := http.DefaultClient.Do(req)
 	if err != nil {
+		fmt.Println("[ERR] Do request failed!")
 		panic(err)
 	}
-	res.Body.Close()
+
+	var ret Ret
+	err = json.NewDecoder(res.Body).Decode(&ret)
+	if err != nil {
+		fmt.Println("[ERR] Decode json failed!")
+		panic(err)
+	}
+	if err = res.Body.Close(); err != nil {
+		fmt.Println("[ERR] Close body failed!")
+		panic(err)
+	}
 
 	return ret.Recv
 }
