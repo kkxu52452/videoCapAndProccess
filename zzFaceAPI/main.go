@@ -24,7 +24,7 @@ type Location struct {
 }
 
 type MyResponse struct {
-	Faces 	[]Location 	`json:"faces"`
+	Faces 	[4]Location 	`json:"faces"`
 }
 
 const zzFace_URL = "https://gateway.qzcloud.com/api/v1/web/zzwu0/face/mtcnnfd.json"
