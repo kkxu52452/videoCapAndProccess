@@ -21,7 +21,6 @@ type Location struct {
 	Top  		float64
 	Width 		float64
 	Height 		float64
-	Rotation 	float64
 }
 
 type MyResponse struct {
