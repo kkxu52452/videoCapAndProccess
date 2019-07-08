@@ -23,11 +23,15 @@ type Location struct {
 	Height 		float64
 }
 
-type MyResponse struct {
-	Faces 	[4]Location 	`json:"faces"`
+type FaceInfo struct {
+	Faces 	[]Location  `json:"faces"`
 }
 
-const zzFace_URL = "https://gateway.qzcloud.com/api/v1/web/zzwu0/face/mtcnnfd.json"
+type MyResponse struct {
+	FaceRet 	FaceInfo 	`json:"face_ret"`
+}
+
+const Face_FDN_URL = "https://47.106.30.3:31001/api/be7132bf-2708-49e7-882a-e61a3ead36b3/facedetec/face-detect-FDN"
 
 func main() {
 
@@ -107,12 +111,12 @@ func main() {
 		imgText := fmt.Sprintf("Time Consumed: %s, Current Time: %s", elapsed, time.Now().UTC())
 
 		// if there is no face in the img
-		if len(resp.Faces) == 0 {
+		if len(resp.FaceRet.Faces) == 0 {
 			gocv.IMWrite(picName, imgCopy)
 			continue
 		}
 		// otherwise, draw a rectangle around each face on the image
-		for _, f := range resp.Faces {
+		for _, f := range resp.FaceRet.Faces {
 			gocv.Rectangle(&imgCopy, image.Rect(int(f.Left),int(f.Top),int(f.Width+f.Left),int(f.Height+f.Top)), blue,3)
 		}
 		gocv.PutText(&imgCopy, imgText, image.Point{50, 50}, gocv.FontHersheyPlain, 1.8, blue, 2)
@@ -126,9 +130,8 @@ func callFaceDetecAPI(imgBase64 string) MyResponse {
 	// request payload
 	payload := strings.NewReader("image_type=BASE64&image=" + imgBase64)
 
-	req, _ := http.NewRequest("POST", zzFace_URL, payload)
+	req, _ := http.NewRequest("POST", Face_FDN_URL, payload)
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("x-fdn-sign", "k,1560239155,13ef948afdda0efd4fc04416267b458f")
 
 	// check if new client is created every call, package FIN
 	// https://medium.com/@nate510/don-t-use-go-s-default-http-client-4804cb19f779
